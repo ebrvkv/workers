@@ -19,11 +19,14 @@ func NewPool(poolSize int32) *Pool {
 	return p
 }
 
-func (p *Pool) Woker(f func(...any) error) (err error) {
+func (p *Pool) Worker(f func(...any)) error {
 	if p.counter.Load() == p.size {
 		return errors.New("all workers are busy right now")
 	}
-	p.counter.Add(1)
-	defer p.counter.Add(-1)
-	return f()
+	go func() {
+		p.counter.Add(1)
+		f()
+		p.counter.Add(-1)
+	}()
+	return nil
 }
